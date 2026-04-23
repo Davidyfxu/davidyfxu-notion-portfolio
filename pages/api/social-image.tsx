@@ -1,4 +1,3 @@
-import ky from 'ky'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { ImageResponse } from 'next/og'
 import { type PageBlock } from 'notion-types'
@@ -12,7 +11,6 @@ import {
 } from 'notion-utils'
 
 import * as libConfig from '@/lib/config'
-import interSemiBoldFont from '@/lib/fonts/inter-semibold'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { notion } from '@/lib/notion-api'
 import { type NotionPageInfo, type PageError } from '@/lib/types'
@@ -112,7 +110,7 @@ export default async function OGImage(
             style={{
               fontSize: 70,
               fontWeight: 700,
-              fontFamily: 'Inter'
+              fontFamily: 'sans-serif'
             }}
           >
             {pageInfo.title}
@@ -151,15 +149,7 @@ export default async function OGImage(
     </div>,
     {
       width: 1200,
-      height: 630,
-      fonts: [
-        {
-          name: 'Inter',
-          data: interSemiBoldFont,
-          style: 'normal',
-          weight: 700
-        }
-      ]
+      height: 630
     }
   )
 }
@@ -277,8 +267,11 @@ async function isUrlReachable(
   }
 
   try {
-    await ky.head(url)
-    return true
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000)
+    const response = await fetch(url, { method: 'HEAD', signal: controller.signal })
+    clearTimeout(timeout)
+    return response.ok
   } catch {
     return false
   }
